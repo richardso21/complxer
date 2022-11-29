@@ -1,5 +1,10 @@
 package lc3vm
 
+import (
+	"fmt"
+	"os"
+)
+
 // structure representing LC3_st
 type LC3_st struct {
 	MEMORY [1 << 16]uint16
@@ -42,16 +47,31 @@ func (lc3 *LC3_st) RunLine() {
 		lc3._HALT = true
 		return
 	}
-	// checkIO - update memory with current display/keyboard status
-	lc3.checkIO()
+	// syncIO - update memory with display/keyboard, and vice versa
+	lc3.syncIO()
 	// FETCH - get instruction from memory
 	lc3.fetch()
 	// EXECUTE - decode/run instruction
 	lc3.execute(lc3.IR)
 }
 
-func (lc3 *LC3_st) checkIO() {
+func (lc3 *LC3_st) syncIO() {
+	// check if keyboard is ready (STDIN has data)
+	stat, _ := os.Stdin.Stat()
+	if ((stat.Mode() & os.ModeCharDevice) == 0) && lc3.MEMORY[KBSRADDR] == 0 {
+		// set keyboard status
+		lc3.MEMORY[KBSRADDR] = 1 << 15
+		// read char into keyboard data
+		fmt.Scanf("%c", &lc3.MEMORY[KBDRADDR])
+	}
 
+	// check if display is ready (we put something into DDRADDR)
+	if lc3.MEMORY[DSRADDR] != 0 {
+		// print char
+		fmt.Printf("%c", lc3.MEMORY[DDRADDR])
+		lc3.MEMORY[DSRADDR] = 0 // clear display status
+		lc3.MEMORY[DDRADDR] = 0 // clear display data
+	}
 }
 
 func (lc3 *LC3_st) fetch() {

@@ -1,8 +1,6 @@
 package lc3vm
 
-type opFunc func()
-
-var opFuncs = [...]opFunc{ // array of opFuncs in order of op-code value
+var opFuncs = [...]func(){ // array of opFuncs in order of op-code value
 	LC3._br,
 	LC3._add,
 	LC3._ld,
@@ -21,7 +19,7 @@ var opFuncs = [...]opFunc{ // array of opFuncs in order of op-code value
 	LC3._trap,
 }
 
-var OP_FUNCMAP = make(map[uint16]opFunc)
+var OP_FUNCMAP = make(map[uint16]func())
 
 func init() {
 	for i, fn := range opFuncs {
@@ -100,7 +98,12 @@ func (lc3 *LC3_st) _not() {
 func (lc3 *LC3_st) _ld() {
 	IR := lc3.IR
 	offset := IR & PCOFFSET9
-	res := lc3.MEMORY[lc3.PC+offset]
+	location := lc3.PC + offset
+	if location == KBDRADDR {
+		// toggle keyboard status if reading from keyboard
+		lc3.MEMORY[KBSRADDR] = 0
+	}
+	res := lc3.MEMORY[location]
 	lc3.REG[(IR&DR)>>9] = res
 	lc3.updateCC(res)
 }
@@ -109,15 +112,22 @@ func (lc3 *LC3_st) _ldr() {
 	IR := lc3.IR
 	val := lc3.REG[(IR&BaseR)>>6]
 	offset := IR & PCOFFSET6
-	res := lc3.MEMORY[val+offset]
+	location := val + offset
+	if location == KBDRADDR {
+		lc3.MEMORY[KBSRADDR] = 0
+	}
+	res := lc3.MEMORY[location]
 	lc3.REG[(IR&DR)>>9] = res
 	lc3.updateCC(res)
 }
 
 func (lc3 *LC3_st) _ldi() {
 	IR := lc3.IR
-	itmdAddr := lc3.MEMORY[lc3.PC+(IR&PCOFFSET9)]
-	res := lc3.MEMORY[itmdAddr]
+	location := lc3.MEMORY[lc3.PC+(IR&PCOFFSET9)]
+	if location == KBDRADDR {
+		lc3.MEMORY[KBSRADDR] = 0
+	}
+	res := lc3.MEMORY[location]
 	lc3.REG[(IR&DR)>>9] = res
 	lc3.updateCC(res)
 }
@@ -128,6 +138,8 @@ func (lc3 *LC3_st) _st() {
 	location := lc3.PC + (IR & PCOFFSET9)
 	if (location < 0x3000) || (location >= 0xFE00) {
 		return // prevent overwriting unpriveleged memory
+	} else if location == DSRADDR { // toggle display status if writing to display
+		lc3.MEMORY[DSRADDR] = 1 << 15
 	}
 	lc3.MEMORY[location] = val
 }
@@ -140,6 +152,8 @@ func (lc3 *LC3_st) _str() {
 	location := baseR + offset
 	if (location < 0x3000) || (location >= 0xFE00) {
 		return
+	} else if location == DSRADDR {
+		lc3.MEMORY[DSRADDR] = 1 << 15
 	}
 	lc3.MEMORY[location] = val
 }
@@ -150,6 +164,8 @@ func (lc3 *LC3_st) _sti() {
 	itmdAddr := lc3.MEMORY[lc3.PC+(IR&PCOFFSET9)]
 	if (itmdAddr < 0x3000) || (itmdAddr >= 0xFE00) {
 		return
+	} else if itmdAddr == DSRADDR {
+		lc3.MEMORY[DSRADDR] = 1 << 15
 	}
 	lc3.MEMORY[itmdAddr] = val
 }
