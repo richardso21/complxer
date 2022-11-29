@@ -3,22 +3,22 @@ package lc3vm
 type opFunc func()
 
 var opFuncs = [...]opFunc{ // array of opFuncs in order of op-code value
-	LC3VM._br,
-	LC3VM._add,
-	LC3VM._ld,
-	LC3VM._st,
-	LC3VM._jsr,
-	LC3VM._and,
-	LC3VM._ldr,
-	LC3VM._str,
-	LC3VM._rti,
-	LC3VM._not,
-	LC3VM._ldi,
-	LC3VM._sti,
-	LC3VM._jmp,
-	LC3VM._rsvd,
-	LC3VM._lea,
-	LC3VM._trap,
+	LC3._br,
+	LC3._add,
+	LC3._ld,
+	LC3._st,
+	LC3._jsr,
+	LC3._and,
+	LC3._ldr,
+	LC3._str,
+	LC3._rti,
+	LC3._not,
+	LC3._ldi,
+	LC3._sti,
+	LC3._jmp,
+	LC3._rsvd,
+	LC3._lea,
+	LC3._trap,
 }
 
 var OP_FUNCMAP = make(map[uint16]opFunc)
@@ -41,19 +41,19 @@ const (
 	PCOFFSET6   = 0b0000_0000_0011_1111
 )
 
-func (lc3 *LC3_t) _br() {
+func (lc3 *LC3_st) _br() {
 	IR := lc3.IR
 	if lc3.NZP&((IR&DR)>>9) != 0 { // check if current NZP matches BR nzp
 		lc3.PC += IR & PCOFFSET9
 	}
 }
 
-func (lc3 *LC3_t) _jmp() {
+func (lc3 *LC3_st) _jmp() {
 	IR := lc3.IR
 	lc3.PC = lc3.REG[(IR&BaseR)>>6] // set PC to baseR unconditionally
 }
 
-func (lc3 *LC3_t) _jsr() {
+func (lc3 *LC3_st) _jsr() {
 	IR := lc3.IR
 	lc3.REG[7] = lc3.PC      // set R7 to PC
 	if IR&JSRR_TOGGLE == 1 { // check if JSR or JSRR
@@ -63,7 +63,7 @@ func (lc3 *LC3_t) _jsr() {
 	}
 }
 
-func (lc3 *LC3_t) _add() {
+func (lc3 *LC3_st) _add() {
 	IR := lc3.IR
 	add1 := lc3.REG[(IR&BaseR)>>6] // get baseR (SR1)
 	var add2 uint16
@@ -77,7 +77,7 @@ func (lc3 *LC3_t) _add() {
 	lc3.updateCC(res)         // update NZP
 }
 
-func (lc3 *LC3_t) _and() {
+func (lc3 *LC3_st) _and() {
 	IR := lc3.IR
 	and1 := lc3.REG[(IR&BaseR)>>6] // get baseR (SR1)
 	var and2 uint16
@@ -91,13 +91,13 @@ func (lc3 *LC3_t) _and() {
 	lc3.updateCC(res)         // update NZP
 }
 
-func (lc3 *LC3_t) _not() {
+func (lc3 *LC3_st) _not() {
 	IR := lc3.IR
 	res := ^lc3.REG[IR&BaseR]
 	lc3.REG[(IR&DR)>>9] = res
 }
 
-func (lc3 *LC3_t) _ld() {
+func (lc3 *LC3_st) _ld() {
 	IR := lc3.IR
 	offset := IR & PCOFFSET9
 	res := lc3.MEMORY[lc3.PC+offset]
@@ -105,7 +105,7 @@ func (lc3 *LC3_t) _ld() {
 	lc3.updateCC(res)
 }
 
-func (lc3 *LC3_t) _ldr() {
+func (lc3 *LC3_st) _ldr() {
 	IR := lc3.IR
 	val := lc3.REG[(IR&BaseR)>>6]
 	offset := IR & PCOFFSET6
@@ -114,7 +114,7 @@ func (lc3 *LC3_t) _ldr() {
 	lc3.updateCC(res)
 }
 
-func (lc3 *LC3_t) _ldi() {
+func (lc3 *LC3_st) _ldi() {
 	IR := lc3.IR
 	itmdAddr := lc3.MEMORY[lc3.PC+(IR&PCOFFSET9)]
 	res := lc3.MEMORY[itmdAddr]
@@ -122,39 +122,49 @@ func (lc3 *LC3_t) _ldi() {
 	lc3.updateCC(res)
 }
 
-func (lc3 *LC3_t) _st() {
+func (lc3 *LC3_st) _st() {
 	IR := lc3.IR
 	val := lc3.REG[(IR&DR)>>9]
 	location := lc3.PC + (IR & PCOFFSET9)
+	if (location < 0x3000) || (location >= 0xFE00) {
+		return // prevent overwriting unpriveleged memory
+	}
 	lc3.MEMORY[location] = val
 }
 
-func (lc3 *LC3_t) _str() {
+func (lc3 *LC3_st) _str() {
 	IR := lc3.IR
 	val := lc3.REG[(IR&DR)>>9]
 	baseR := lc3.REG[(IR&BaseR)>>6]
 	offset := IR & PCOFFSET6
-	lc3.MEMORY[baseR+offset] = val
+	location := baseR + offset
+	if (location < 0x3000) || (location >= 0xFE00) {
+		return
+	}
+	lc3.MEMORY[location] = val
 }
 
-func (lc3 *LC3_t) _sti() {
+func (lc3 *LC3_st) _sti() {
 	IR := lc3.IR
 	val := lc3.REG[(IR&DR)>>9]
 	itmdAddr := lc3.MEMORY[lc3.PC+(IR&PCOFFSET9)]
+	if (itmdAddr < 0x3000) || (itmdAddr >= 0xFE00) {
+		return
+	}
 	lc3.MEMORY[itmdAddr] = val
 }
 
-func (lc3 *LC3_t) _lea() {
+func (lc3 *LC3_st) _lea() {
 	IR := lc3.IR
 	val := lc3.PC + (IR & PCOFFSET9)
 	lc3.REG[(IR&DR)>>9] = val
 }
 
-func (lc3 *LC3_t) _rsvd() {
+func (lc3 *LC3_st) _rsvd() {
 	// do nothing, reserved
 }
 
-func (lc3 *LC3_t) updateCC(res uint16) {
+func (lc3 *LC3_st) updateCC(res uint16) {
 	signedRes := int16(res) // convert to signed int
 	if signedRes < 0 {
 		lc3.NZP = 1 << 2

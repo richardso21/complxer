@@ -7,7 +7,7 @@ import (
 )
 
 // get initialized LC3 vm
-var LC3VM = lc3vm.LC3VM
+var LC3VM = lc3vm.LC3
 
 func main() {
 	for i := 0; i < 10; i++ {
