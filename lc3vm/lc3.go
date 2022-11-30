@@ -12,7 +12,7 @@ type LC3_st struct {
 	PC     uint16
 	IR     uint16
 	NZP    uint16
-	_HALT  bool
+	HALT   bool
 }
 
 // memory-mapped I/O
@@ -24,14 +24,14 @@ const (
 	DDRADDR  = 0xFE06 // display data
 )
 
-func createLC3() LC3_st {
+func createLC3() *LC3_st {
 	var lc3 LC3_st
 	lc3.Reset(true)
-	return lc3
+	return &lc3
 }
 
 func (lc3 *LC3_st) Reset(resetPC bool) {
-	lc3._HALT = false
+	lc3.HALT = false
 	lc3.MEMORY = [1 << 16]uint16{}
 	lc3.REG = [8]uint16{}
 	if resetPC {
@@ -39,20 +39,20 @@ func (lc3 *LC3_st) Reset(resetPC bool) {
 	}
 }
 
-func (lc3 *LC3_st) RunLine() {
-	// if halted, do nothing
-	if lc3._HALT {
-		return
-	} else if lc3.PC < 0x3000 || lc3.PC >= 0xFE00 { // off-limits from usable memory
-		lc3._HALT = true
-		return
+func (lc3 *LC3_st) Run() {
+	// run in a loop until HALT or PC goes off-limits
+	for !lc3.HALT {
+		if lc3.PC < 0x3000 || lc3.PC >= 0xFE00 { // off-limits from usable memory
+			lc3.HALT = true
+			continue
+		}
+		// syncIO - update memory with display/keyboard, and vice versa
+		lc3.syncIO()
+		// FETCH - get instruction from memory
+		lc3.fetch()
+		// EXECUTE - decode/run instruction
+		lc3.execute()
 	}
-	// syncIO - update memory with display/keyboard, and vice versa
-	lc3.syncIO()
-	// FETCH - get instruction from memory
-	lc3.fetch()
-	// EXECUTE - decode/run instruction
-	lc3.execute(lc3.IR)
 }
 
 func (lc3 *LC3_st) syncIO() {
@@ -79,8 +79,8 @@ func (lc3 *LC3_st) fetch() {
 	lc3.PC++                    // increment PC (PC*)
 }
 
-func (lc3 *LC3_st) execute(IR uint16) {
-	op := IR >> 12 // get op-code
+func (lc3 *LC3_st) execute() {
+	op := lc3.IR >> 12 // get op-code
 	OP_FUNCMAP[op]()
 }
 

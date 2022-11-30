@@ -42,7 +42,7 @@ const (
 func (lc3 *LC3_st) _br() {
 	IR := lc3.IR
 	if lc3.NZP&((IR&DR)>>9) != 0 { // check if current NZP matches BR nzp
-		lc3.PC += IR & PCOFFSET9
+		lc3.PC += signExt(IR&PCOFFSET9, 8)
 	}
 }
 
@@ -53,11 +53,11 @@ func (lc3 *LC3_st) _jmp() {
 
 func (lc3 *LC3_st) _jsr() {
 	IR := lc3.IR
-	lc3.REG[7] = lc3.PC      // set R7 to PC
-	if IR&JSRR_TOGGLE == 1 { // check if JSR or JSRR
+	lc3.REG[7] = lc3.PC                // set R7 to PC
+	if IR&JSRR_TOGGLE == JSRR_TOGGLE { // check if JSR or JSRR
 		lc3.PC = lc3.REG[(IR&BaseR)>>6]
 	} else {
-		lc3.PC += IR & PCOFFSET11
+		lc3.PC += signExt(IR&PCOFFSET11, 10)
 	}
 }
 
@@ -65,12 +65,12 @@ func (lc3 *LC3_st) _add() {
 	IR := lc3.IR
 	add1 := lc3.REG[(IR&BaseR)>>6] // get baseR (SR1)
 	var add2 uint16
-	if IR&IMM5_TOGGLE == 1 { // get either imm5 or SR2 register
+	if IR&IMM5_TOGGLE == IMM5_TOGGLE { // get either imm5 or SR2 register
 		add2 = IR & IMM5
 	} else {
 		add2 = lc3.REG[IR&SR2]
 	}
-	res := add1 + add2
+	res := add1 + signExt(add2, 4)
 	lc3.REG[(IR&DR)>>9] = res // set DR to add1 + add2
 	lc3.updateCC(res)         // update NZP
 }
@@ -79,12 +79,12 @@ func (lc3 *LC3_st) _and() {
 	IR := lc3.IR
 	and1 := lc3.REG[(IR&BaseR)>>6] // get baseR (SR1)
 	var and2 uint16
-	if IR&IMM5_TOGGLE == 1 { // get either imm5 or SR2 register
+	if IR&IMM5_TOGGLE == IMM5_TOGGLE { // get either imm5 or SR2 register
 		and2 = IR & IMM5
 	} else {
 		and2 = lc3.REG[IR&SR2]
 	}
-	res := and1 & and2
+	res := and1 & signExt(and2, 4)
 	lc3.REG[(IR&DR)>>9] = res // set DR to and1 & and2
 	lc3.updateCC(res)         // update NZP
 }
@@ -97,7 +97,7 @@ func (lc3 *LC3_st) _not() {
 
 func (lc3 *LC3_st) _ld() {
 	IR := lc3.IR
-	offset := IR & PCOFFSET9
+	offset := signExt(IR&PCOFFSET9, 8)
 	location := lc3.PC + offset
 	if location == KBDRADDR {
 		// toggle keyboard status if reading from keyboard
@@ -111,7 +111,7 @@ func (lc3 *LC3_st) _ld() {
 func (lc3 *LC3_st) _ldr() {
 	IR := lc3.IR
 	val := lc3.REG[(IR&BaseR)>>6]
-	offset := IR & PCOFFSET6
+	offset := signExt(IR&PCOFFSET6, 5)
 	location := val + offset
 	if location == KBDRADDR {
 		lc3.MEMORY[KBSRADDR] = 0
@@ -123,7 +123,7 @@ func (lc3 *LC3_st) _ldr() {
 
 func (lc3 *LC3_st) _ldi() {
 	IR := lc3.IR
-	location := lc3.MEMORY[lc3.PC+(IR&PCOFFSET9)]
+	location := lc3.MEMORY[lc3.PC+signExt(IR&PCOFFSET9, 8)]
 	if location == KBDRADDR {
 		lc3.MEMORY[KBSRADDR] = 0
 	}
@@ -135,7 +135,7 @@ func (lc3 *LC3_st) _ldi() {
 func (lc3 *LC3_st) _st() {
 	IR := lc3.IR
 	val := lc3.REG[(IR&DR)>>9]
-	location := lc3.PC + (IR & PCOFFSET9)
+	location := lc3.PC + signExt(IR&PCOFFSET9, 8)
 	if (location < 0x3000) || (location >= 0xFE00) {
 		return // prevent overwriting unpriveleged memory
 	} else if location == DSRADDR { // toggle display status if writing to display
@@ -148,7 +148,7 @@ func (lc3 *LC3_st) _str() {
 	IR := lc3.IR
 	val := lc3.REG[(IR&DR)>>9]
 	baseR := lc3.REG[(IR&BaseR)>>6]
-	offset := IR & PCOFFSET6
+	offset := signExt(IR&PCOFFSET6, 5)
 	location := baseR + offset
 	if (location < 0x3000) || (location >= 0xFE00) {
 		return
@@ -161,7 +161,7 @@ func (lc3 *LC3_st) _str() {
 func (lc3 *LC3_st) _sti() {
 	IR := lc3.IR
 	val := lc3.REG[(IR&DR)>>9]
-	itmdAddr := lc3.MEMORY[lc3.PC+(IR&PCOFFSET9)]
+	itmdAddr := lc3.MEMORY[lc3.PC+signExt(IR&PCOFFSET9, 8)]
 	if (itmdAddr < 0x3000) || (itmdAddr >= 0xFE00) {
 		return
 	} else if itmdAddr == DSRADDR {
@@ -172,7 +172,7 @@ func (lc3 *LC3_st) _sti() {
 
 func (lc3 *LC3_st) _lea() {
 	IR := lc3.IR
-	val := lc3.PC + (IR & PCOFFSET9)
+	val := lc3.PC + signExt(IR&PCOFFSET9, 8)
 	lc3.REG[(IR&DR)>>9] = val
 }
 
@@ -192,3 +192,12 @@ func (lc3 *LC3_st) updateCC(res uint16) {
 }
 
 // thank god for github copilot
+
+func signExt(val uint16, signedBit int) uint16 {
+	var sigBit uint16 = 1 << signedBit
+	sigMask := ^(sigBit - 1)
+	if val&sigBit == sigBit {
+		return val | sigMask
+	}
+	return val
+}

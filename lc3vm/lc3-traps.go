@@ -58,7 +58,7 @@ func (lc3 *LC3_st) _trap_in() {
 
 func (lc3 *LC3_st) _trap_halt() {
 	// halt program
-	lc3._HALT = true
+	lc3.HALT = true
 	// syscall.Exit(0)
 
 }
