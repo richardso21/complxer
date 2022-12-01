@@ -12,11 +12,11 @@ import (
 var LC3VM = lc3vm.LC3
 
 func main() {
-	f, err := os.Open("example/lower.obj")
+	f, err := os.Open("example/2048.obj")
 	if err != nil {
 		log.Fatal(err)
 	}
 	LC3VM.LoadObjFile(f)
 	LC3VM.Run()
-	fmt.Println("==== Program finished ====")
+	fmt.Println("\n==== Program finished ====")
 }

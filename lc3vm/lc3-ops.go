@@ -29,7 +29,7 @@ func init() {
 
 const (
 	IMM5_TOGGLE = 1 << 5
-	JSRR_TOGGLE = 1 << 11
+	JSR_TOGGLE  = 1 << 11
 	IMM5        = 0b0000_0000_0001_1111
 	DR          = 0b0000_1110_0000_0000
 	BaseR       = 0b0000_0001_1100_0000
@@ -53,11 +53,11 @@ func (lc3 *LC3_st) _jmp() {
 
 func (lc3 *LC3_st) _jsr() {
 	IR := lc3.IR
-	lc3.REG[7] = lc3.PC                // set R7 to PC
-	if IR&JSRR_TOGGLE == JSRR_TOGGLE { // check if JSR or JSRR
-		lc3.PC = lc3.REG[(IR&BaseR)>>6]
-	} else {
+	lc3.REG[7] = lc3.PC              // set R7 to PC
+	if IR&JSR_TOGGLE == JSR_TOGGLE { // check if JSR or JSRR
 		lc3.PC += signExt(IR&PCOFFSET11, 10)
+	} else {
+		lc3.PC = lc3.REG[(IR&BaseR)>>6]
 	}
 }
 
@@ -168,8 +168,8 @@ func (lc3 *LC3_st) updateCC(res uint16) {
 
 // thank god for github copilot
 
-func signExt(val uint16, signedBit int) uint16 {
-	var sigBit uint16 = 1 << signedBit
+func signExt(val uint16, signedBitLocation int) uint16 {
+	var sigBit uint16 = 1 << signedBitLocation
 	sigMask := ^(sigBit - 1)
 	if val&sigBit == sigBit {
 		return val | sigMask

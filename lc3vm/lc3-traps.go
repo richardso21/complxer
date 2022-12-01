@@ -2,6 +2,9 @@ package lc3vm
 
 import (
 	"fmt"
+	"log"
+
+	"github.com/eiannone/keyboard"
 )
 
 const (
@@ -30,9 +33,20 @@ func (lc3 *LC3_st) _trap() {
 }
 
 func (lc3 *LC3_st) _trap_getc() {
-	var input string
-	fmt.Scanf("%c", &input)
-	lc3.REG[0] = uint16(input[0])
+	ch, controlKey, err := keyboard.GetSingleKey()
+	if controlKey == keyboard.KeyCtrlC {
+		lc3.HALT = true
+		log.Fatal("Keyboard interrupt")
+	}
+	if err != nil {
+		panic(err)
+	}
+	if ch != 0 {
+		lc3.REG[0] = uint16(ch)
+	} else {
+		// avoid null terminator
+		lc3.REG[0] = 0
+	}
 }
 
 func (lc3 *LC3_st) _trap_out() {
@@ -49,11 +63,23 @@ func (lc3 *LC3_st) _trap_puts() {
 }
 
 func (lc3 *LC3_st) _trap_in() {
-	var input string
 	fmt.Print("IN: ")
-	fmt.Scanf("%c", &input)
-	lc3.REG[0] = uint16(input[0])
-	fmt.Printf("%c", input[0])
+	ch, controlKey, err := keyboard.GetSingleKey()
+	if controlKey == keyboard.KeyCtrlC {
+		lc3.HALT = true
+		log.Fatal("Keyboard interrupt")
+	}
+	if err != nil {
+		panic(err)
+	}
+	if ch != 0 {
+		lc3.REG[0] = uint16(ch)
+		fmt.Printf("\n%c\n", ch)
+
+	} else {
+		// avoid null terminator
+		lc3.REG[0] = 0
+	}
 }
 
 func (lc3 *LC3_st) _trap_halt() {
