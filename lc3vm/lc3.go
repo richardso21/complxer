@@ -1,7 +1,7 @@
 package lc3vm
 
 import (
-	"fmt"
+	"bufio"
 	"os"
 )
 
@@ -16,7 +16,6 @@ type LC3_st struct {
 }
 
 // memory-mapped I/O
-// TODO: implement ST/LD with memory-mapped I/O
 const (
 	KBSRADDR = 0xFE00 // keyboard status
 	KBDRADDR = 0xFE02 // keyboard data
@@ -33,9 +32,36 @@ func createLC3() *LC3_st {
 func (lc3 *LC3_st) Reset(resetPC bool) {
 	lc3.HALT = false
 	lc3.MEMORY = [1 << 16]uint16{}
+	// assuming DSR is always on ready :)
+	lc3.MEMORY[DSRADDR] = 1 << 15
 	lc3.REG = [8]uint16{}
 	if resetPC {
 		lc3.PC = 0x3000
+	}
+}
+
+// modified from bufio library to scan 16 bits instead of 8 (makeshift 2-byte scanner)
+func scan16Bits(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	return 2, data[0:2], nil
+}
+
+func read16Bits(sf *bufio.Scanner) uint16 {
+	return uint16(sf.Bytes()[0])<<8 | uint16(sf.Bytes()[1])
+}
+
+func (lc3 *LC3_st) LoadObjFile(filename *os.File) {
+	// read file into memory
+	sf := bufio.NewScanner(filename)
+	sf.Split(scan16Bits)
+	sf.Scan()                  // read first line (header)
+	currAddr := read16Bits(sf) // set current addr to .ORIG
+	lc3.PC = currAddr          // set PC to beginning program
+	// now to read the rest of the program
+	for ; sf.Scan(); currAddr++ {
+		lc3.MEMORY[currAddr] = read16Bits(sf)
 	}
 }
 
@@ -46,31 +72,11 @@ func (lc3 *LC3_st) Run() {
 			lc3.HALT = true
 			continue
 		}
-		// syncIO - update memory with display/keyboard, and vice versa
-		lc3.syncIO()
 		// FETCH - get instruction from memory
 		lc3.fetch()
 		// EXECUTE - decode/run instruction
 		lc3.execute()
-	}
-}
-
-func (lc3 *LC3_st) syncIO() {
-	// check if keyboard is ready (STDIN has data)
-	stat, _ := os.Stdin.Stat()
-	if ((stat.Mode() & os.ModeCharDevice) == 0) && lc3.MEMORY[KBSRADDR] == 0 {
-		// set keyboard status
-		lc3.MEMORY[KBSRADDR] = 1 << 15
-		// read char into keyboard data
-		fmt.Scanf("%c", &lc3.MEMORY[KBDRADDR])
-	}
-
-	// check if display is ready (we put something into DDRADDR)
-	if lc3.MEMORY[DSRADDR] != 0 {
-		// print char
-		fmt.Printf("%c", lc3.MEMORY[DDRADDR])
-		lc3.MEMORY[DSRADDR] = 0 // clear display status
-		lc3.MEMORY[DDRADDR] = 0 // clear display data
+		// fmt.Printf("%04X\n", lc3.PC)
 	}
 }
 
