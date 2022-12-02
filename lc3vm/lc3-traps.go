@@ -50,8 +50,8 @@ func (lc3 *LC3_st) _trap_getc() {
 }
 
 func (lc3 *LC3_st) _trap_out() {
-	addr := lc3.REG[0]
-	fmt.Printf("%c", lc3.MEMORY[addr])
+	val := lc3.REG[0]
+	fmt.Printf("%c", val)
 }
 
 func (lc3 *LC3_st) _trap_puts() {

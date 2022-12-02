@@ -76,7 +76,6 @@ func (lc3 *LC3_st) Run() {
 		lc3.fetch()
 		// EXECUTE - decode/run instruction
 		lc3.execute()
-		// fmt.Printf("%04X\n", lc3.PC)
 	}
 }
 
