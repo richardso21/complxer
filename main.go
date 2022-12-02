@@ -12,7 +12,7 @@ import (
 var LC3VM = lc3vm.LC3
 
 func main() {
-	f, err := os.Open("example/2048.obj")
+	f, err := os.Open("example/rogue.obj")
 	if err != nil {
 		log.Fatal(err)
 	}

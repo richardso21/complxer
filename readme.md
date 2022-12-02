@@ -11,15 +11,14 @@ throughout the course.
 
 ## TODO
 
-- Minor I/O & trap bugs
-- Interrupts, Async I/O
 - Stepping/Debug mode for LC3
 - **Assembler**
 - **GUI**
+- Interrupts, Async I/O
 
 ### Done
 
 - Mock Registers & Memory
-- Support for all op-Codes
-- Basic Memory-Mapped I/O
+- Support for all op-Codes & Traps
+- Memory-Mapped I/O
 - Read and Load Object Files
