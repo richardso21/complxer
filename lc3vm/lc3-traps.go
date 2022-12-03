@@ -24,10 +24,6 @@ func init() {
 	}
 }
 
-func (lc3 *LC3vm) rti() {
-	// not implemented
-}
-
 func (lc3 *LC3vm) trap() {
 	// get trap vector, then execute respective function
 	trapFuncMap[lc3.ir&0x00FF]()

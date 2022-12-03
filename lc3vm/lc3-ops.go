@@ -9,7 +9,7 @@ var opFuncs = []func(){ // array of opFuncs in order of op-code value
 	LC3.and,
 	LC3.ldr,
 	LC3.str,
-	LC3.rti,
+	func() {}, // RTI not needed
 	LC3.not,
 	LC3.ldi,
 	LC3.sti,
