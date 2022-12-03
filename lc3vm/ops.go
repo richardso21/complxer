@@ -1,6 +1,6 @@
 package lc3vm
 
-var opFuncs = []func(){ // array of opFuncs in order of op-code value
+var opFuncs = [...]func(){ // array of opFuncs in order of op-code value
 	LC3.br,
 	LC3.add,
 	LC3.ld,
@@ -9,7 +9,7 @@ var opFuncs = []func(){ // array of opFuncs in order of op-code value
 	LC3.and,
 	LC3.ldr,
 	LC3.str,
-	func() {}, // RTI not needed
+	func() {}, // RTI not implemented
 	LC3.not,
 	LC3.ldi,
 	LC3.sti,
