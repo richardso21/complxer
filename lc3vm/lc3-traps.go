@@ -7,84 +7,85 @@ import (
 	"github.com/eiannone/keyboard"
 )
 
-const (
-	_TRAP_GETC = 0x20
-	_TRAP_OUT  = 0x21
-	_TRAP_PUTS = 0x22
-	_TRAP_IN   = 0x23
-	_TRAP_HALT = 0x25
-)
-
-var TRAP_FUNCMAP = map[uint16]func(){
-	_TRAP_GETC: LC3._trap_getc,
-	_TRAP_OUT:  LC3._trap_out,
-	_TRAP_PUTS: LC3._trap_puts,
-	_TRAP_IN:   LC3._trap_in,
-	_TRAP_HALT: LC3._trap_halt,
+var trapFuncs = []func(){
+	LC3.tGetC,
+	LC3.tOut,
+	LC3.tPutS,
+	LC3.tIn,
+	func() {}, // 0x24 not used
+	LC3.tHalt,
 }
 
-func (lc3 *LC3_st) _rti() {
+var trapFuncMap = make(map[uint16]func())
+
+func init() {
+	for i, fn := range trapFuncs {
+		trapFuncMap[uint16(i)+0x20] = fn
+	}
+}
+
+func (lc3 *LC3vm) rti() {
 	// not implemented
 }
 
-func (lc3 *LC3_st) _trap() {
+func (lc3 *LC3vm) trap() {
 	// get trap vector, then execute respective function
-	TRAP_FUNCMAP[lc3.IR&0x00FF]()
+	trapFuncMap[lc3.ir&0x00FF]()
 }
 
-func (lc3 *LC3_st) _trap_getc() {
+func (lc3 *LC3vm) tGetC() {
 	ch, controlKey, err := keyboard.GetSingleKey()
 	if controlKey == keyboard.KeyCtrlC {
-		lc3.HALT = true
+		lc3.halt = true
 		log.Fatal("Keyboard interrupt")
 	}
 	if err != nil {
 		panic(err)
 	}
 	if ch != 0 {
-		lc3.REG[0] = uint16(ch)
+		lc3.reg[0] = uint16(ch)
 	} else {
 		// avoid null terminator
-		lc3.REG[0] = 0
+		lc3.reg[0] = 0
 	}
 }
 
-func (lc3 *LC3_st) _trap_out() {
-	val := lc3.REG[0]
+func (lc3 *LC3vm) tOut() {
+	val := lc3.reg[0]
 	fmt.Printf("%c", val)
 }
 
-func (lc3 *LC3_st) _trap_puts() {
-	addr := lc3.REG[0]
-	for lc3.MEMORY[addr] != 0 {
-		fmt.Printf("%c", lc3.MEMORY[addr])
+func (lc3 *LC3vm) tPutS() {
+	addr := lc3.reg[0]
+	for lc3.mem[addr] != 0 {
+		fmt.Printf("%c", lc3.mem[addr])
 		addr++
 	}
 }
 
-func (lc3 *LC3_st) _trap_in() {
+func (lc3 *LC3vm) tIn() {
 	fmt.Print("IN: ")
 	ch, controlKey, err := keyboard.GetSingleKey()
 	if controlKey == keyboard.KeyCtrlC {
-		lc3.HALT = true
+		lc3.halt = true
 		log.Fatal("Keyboard interrupt")
 	}
 	if err != nil {
 		panic(err)
 	}
 	if ch != 0 {
-		lc3.REG[0] = uint16(ch)
+		lc3.reg[0] = uint16(ch)
 		fmt.Printf("\n%c\n", ch)
 
 	} else {
 		// avoid null terminator
-		lc3.REG[0] = 0
+		lc3.reg[0] = 0
 	}
 }
 
-func (lc3 *LC3_st) _trap_halt() {
+func (lc3 *LC3vm) tHalt() {
 	// halt program
-	lc3.HALT = true
+	lc3.halt = true
 	// syscall.Exit(0)
 
 }
