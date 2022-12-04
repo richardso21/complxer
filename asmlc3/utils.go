@@ -24,6 +24,7 @@ func getLine(s *bufio.Scanner) string {
 	// remove comments (any text after ';')
 	res := strings.Split(s.Text(), ";")[0]
 	res = strings.TrimSpace(res) // trim whitespaces
+	res = strings.ToUpper(res)   // convert to uppercase to match with keywords
 	return res
 }
 

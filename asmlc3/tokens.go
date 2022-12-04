@@ -1,8 +1,6 @@
 package asmlc3
 
 import (
-	"strings"
-
 	"golang.org/x/exp/slices"
 )
 
@@ -18,6 +16,7 @@ var opNames = [...]string{
 	"ADD",
 	"LD",
 	"ST",
+	"JSR",
 	"JSRR",
 	"AND",
 	"LDR",
@@ -27,12 +26,13 @@ var opNames = [...]string{
 	"LDI",
 	"STI",
 	"JMP",
+	"RET",
 	"LEA",
 	"TRAP",
 }
 
 func isOp(s string) bool {
-	return slices.Contains(opNames[:], strings.ToUpper(s))
+	return slices.Contains(opNames[:], s)
 }
 
 var trapNames = [...]string{
@@ -45,7 +45,7 @@ var trapNames = [...]string{
 }
 
 func isTrap(s string) bool {
-	return slices.Contains(trapNames[:], strings.ToUpper(s))
+	return slices.Contains(trapNames[:], s)
 }
 
 var pseudoOpNames = [...]string{
@@ -57,9 +57,28 @@ var pseudoOpNames = [...]string{
 }
 
 func isPseudoOp(s string) bool {
-	return slices.Contains(pseudoOpNames[:], strings.ToUpper(s))
+	return slices.Contains(pseudoOpNames[:], s)
 }
 
 func isKeyword(s string) bool {
 	return isOp(s) || isPseudoOp(s) || isTrap(s)
+}
+
+var regNames = [...]string{
+	"R0",
+	"R1",
+	"R2",
+	"R3",
+	"R4",
+	"R5",
+	"R6",
+	"R7",
+}
+
+func isReg(s string) bool {
+	return slices.Contains(regNames[:], s)
+}
+
+func getReg(s string) uint16 {
+	return uint16(slices.Index(regNames[:], s))
 }

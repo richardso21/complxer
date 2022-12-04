@@ -16,13 +16,13 @@ func LoadASMFile(lc3 *lc3vm.LC3vm, file *os.File) (symTable, error) {
 	if !sf.Scan() {
 		return nil, errors.New("empty file")
 	}
-	startAddr, table, err := getSymTable(sf) // generate symbol table
+	table, err := getSymTable(sf) // generate symbol table
 	if err != nil {
 		return nil, err
 	}
 
 	file.Seek(0, io.SeekStart) // reset file pointer for second pass
-	loadOnLC3(lc3, sf, startAddr, &table)
+	loadOnLC3(lc3, sf, &table)
 
 	return table, nil
 }

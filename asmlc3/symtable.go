@@ -4,7 +4,7 @@ import "bufio"
 
 type symTable map[string]uint16
 
-func getSymTable(s *bufio.Scanner) (uint16, symTable, error) {
+func getSymTable(s *bufio.Scanner) (symTable, error) {
 	sTable := make(map[string]uint16)
 	s.Scan() // get first line
 	// skip comments until .ORIG
@@ -12,11 +12,10 @@ func getSymTable(s *bufio.Scanner) (uint16, symTable, error) {
 		s.Scan()
 	}
 	// try getting starting address
-	initialAddr, err := getOrigAddr(getLine(s))
+	addr, err := getOrigAddr(getLine(s))
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
-	addr := initialAddr
 
 	for s.Scan() {
 		line := getLine(s)
@@ -38,5 +37,5 @@ func getSymTable(s *bufio.Scanner) (uint16, symTable, error) {
 			addr++
 		}
 	}
-	return initialAddr, sTable, nil
+	return sTable, nil
 }
