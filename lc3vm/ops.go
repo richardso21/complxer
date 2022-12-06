@@ -42,7 +42,7 @@ const (
 func (lc3 *LC3vm) br() {
 	IR := lc3.ir
 	if lc3.nzp&((IR&DR)>>9) != 0 { // check if current NZP matches BR nzp
-		lc3.pc += signExt(IR&PCOFFSET9, 8)
+		lc3.pc += signExt(IR&PCOFFSET9, 9)
 	}
 }
 
@@ -59,7 +59,7 @@ func (lc3 *LC3vm) jsr() {
 	IR := lc3.ir
 	lc3.reg[7] = lc3.pc              // set R7 to PC
 	if IR&JSR_TOGGLE == JSR_TOGGLE { // check if JSR or JSRR
-		lc3.pc += signExt(IR&PCOFFSET11, 10)
+		lc3.pc += signExt(IR&PCOFFSET11, 11)
 	} else {
 		lc3.pc = lc3.reg[(IR&BaseR)>>6]
 	}
@@ -71,7 +71,7 @@ func (lc3 *LC3vm) add() {
 	add1 := lc3.reg[(IR&BaseR)>>6] // get baseR (SR1)
 	var add2 uint16
 	if IR&IMM5_TOGGLE == IMM5_TOGGLE { // get either imm5 or SR2 register
-		add2 = signExt(IR&IMM5, 4)
+		add2 = signExt(IR&IMM5, 5)
 	} else {
 		add2 = lc3.reg[IR&SR2]
 	}
@@ -85,7 +85,7 @@ func (lc3 *LC3vm) and() {
 	and1 := lc3.reg[(IR&BaseR)>>6] // get baseR (SR1)
 	var and2 uint16
 	if IR&IMM5_TOGGLE == IMM5_TOGGLE { // get either imm5 or SR2 register
-		and2 = signExt(IR&IMM5, 4)
+		and2 = signExt(IR&IMM5, 5)
 	} else {
 		and2 = lc3.reg[IR&SR2]
 	}
@@ -102,7 +102,7 @@ func (lc3 *LC3vm) not() {
 
 func (lc3 *LC3vm) ld() {
 	IR := lc3.ir
-	offset := signExt(IR&PCOFFSET9, 8)
+	offset := signExt(IR&PCOFFSET9, 9)
 	location := lc3.pc + offset
 	res := lc3.readMemory(location)
 	lc3.reg[(IR&DR)>>9] = res
@@ -112,7 +112,7 @@ func (lc3 *LC3vm) ld() {
 func (lc3 *LC3vm) ldr() {
 	IR := lc3.ir
 	val := lc3.reg[(IR&BaseR)>>6]
-	offset := signExt(IR&PCOFFSET6, 5)
+	offset := signExt(IR&PCOFFSET6, 6)
 	location := val + offset
 	res := lc3.readMemory(location)
 	lc3.reg[(IR&DR)>>9] = res
@@ -121,7 +121,7 @@ func (lc3 *LC3vm) ldr() {
 
 func (lc3 *LC3vm) ldi() {
 	IR := lc3.ir
-	location := lc3.readMemory(lc3.pc + signExt(IR&PCOFFSET9, 8))
+	location := lc3.readMemory(lc3.pc + signExt(IR&PCOFFSET9, 9))
 	res := lc3.readMemory(location)
 	lc3.reg[(IR&DR)>>9] = res
 	lc3.updateCC(res)
@@ -130,7 +130,7 @@ func (lc3 *LC3vm) ldi() {
 func (lc3 *LC3vm) st() {
 	IR := lc3.ir
 	val := lc3.reg[(IR&DR)>>9]
-	location := lc3.pc + signExt(IR&PCOFFSET9, 8)
+	location := lc3.pc + signExt(IR&PCOFFSET9, 9)
 	lc3.writeMemory(location, val)
 }
 
@@ -138,7 +138,7 @@ func (lc3 *LC3vm) str() {
 	IR := lc3.ir
 	val := lc3.reg[(IR&DR)>>9]
 	baseR := lc3.reg[(IR&BaseR)>>6]
-	offset := signExt(IR&PCOFFSET6, 5)
+	offset := signExt(IR&PCOFFSET6, 6)
 	location := baseR + offset
 	lc3.writeMemory(location, val)
 }
@@ -146,13 +146,13 @@ func (lc3 *LC3vm) str() {
 func (lc3 *LC3vm) sti() {
 	IR := lc3.ir
 	val := lc3.reg[(IR&DR)>>9]
-	location := lc3.readMemory(lc3.pc + signExt(IR&PCOFFSET9, 8))
+	location := lc3.readMemory(lc3.pc + signExt(IR&PCOFFSET9, 9))
 	lc3.writeMemory(location, val)
 }
 
 func (lc3 *LC3vm) lea() {
 	IR := lc3.ir
-	val := lc3.pc + signExt(IR&PCOFFSET9, 8)
+	val := lc3.pc + signExt(IR&PCOFFSET9, 9)
 	lc3.reg[(IR&DR)>>9] = val
 }
 
@@ -168,6 +168,7 @@ func (lc3 *LC3vm) updateCC(res uint16) {
 }
 
 func signExt(val uint16, signedBitLocation int) uint16 {
+	signedBitLocation--
 	var sigBit uint16 = 1 << signedBitLocation
 	sigMask := ^(sigBit - 1)
 	if val&sigBit == sigBit {

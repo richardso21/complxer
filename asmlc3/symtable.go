@@ -8,7 +8,7 @@ func getSymTable(s *bufio.Scanner) (symTable, error) {
 	sTable := make(map[string]uint16)
 	s.Scan() // get first line
 	// skip comments until .ORIG
-	if getLine(s) == "" {
+	for getLine(s) == "" {
 		s.Scan()
 	}
 	// try getting starting address

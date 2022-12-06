@@ -13,18 +13,23 @@ import (
 var LC3 = lc3vm.LC3
 
 func main() {
-	// run2048()
+	// testOBJ()
 	testASM()
+	LC3.Run()
+	fmt.Println(LC3.Reg())
+	for _, v := range LC3.Mem()[0x3000:0x300F] {
+		fmt.Printf("%04X ", v)
+	}
 	fmt.Println("\n==== Program finished ====")
 }
 
-func run2048() {
-	f, err := os.Open("example/2048.obj")
+func testOBJ() {
+	f, err := os.Open("./example/fibloop.obj")
 	if err != nil {
 		log.Fatal(err)
 	}
 	LC3.LoadObjFile(f)
-	LC3.Run()
+	// LC3.Run()
 }
 
 func testASM() {
@@ -33,8 +38,8 @@ func testASM() {
 		log.Fatal(err)
 	}
 	st, err := asmlc3.LoadASMFile(LC3, f)
-	fmt.Println(st)
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(st)
 }

@@ -3,6 +3,7 @@ package asmlc3
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
@@ -11,7 +12,7 @@ import (
 func getOrigAddr(line string) (uint16, error) {
 	args := splitByDelim(line)
 	if len(args) != 2 || args[0] != ".ORIG" {
-		return 0, errors.New("invalid .ORIG line, must be in format: .ORIG x3000")
+		return 0, errors.New("invalid .ORIG first line, must be in format: .ORIG x3000")
 	}
 	addr, err := strToUint16(args[1])
 	if err != nil {
@@ -41,18 +42,39 @@ func getSplitFunc(delims ...rune) func(rune) bool {
 	}
 }
 
-func strToUint16(str string) (uint16, error) {
-	if str[0] == 'x' {
-		res, err := strconv.ParseUint(str[1:], 16, 16)
-		return uint16(res), err
-	} else if str[0] == 'b' {
-		res, err := strconv.ParseUint(str[1:], 2, 16)
-		return uint16(res), err
-	} else if str[0] == '#' {
-		res, err := strconv.ParseUint(str[1:], 10, 16)
-		return uint16(res), err
+func strToUint16(strNum string) (uint16, error) {
+	var res uint64
+	var val int64
+	var err error
+	if strNum[0] == 'X' {
+		res, err = strconv.ParseUint(strNum[1:], 16, 16)
+	} else if strNum[0] == 'B' {
+		res, err = strconv.ParseUint(strNum[1:], 2, 16)
+	} else if strNum[0] == '#' {
+		// if negative
+		if strNum[1] == '-' {
+			val, err = strconv.ParseInt(strNum[1:], 10, 16)
+			res = uint64(val)
+		} else {
+			res, err = strconv.ParseUint(strNum[1:], 10, 16)
+		}
 	} else {
-		res, err := strconv.ParseUint(str, 10, 16)
-		return uint16(res), err
+		if strNum[1] == '-' {
+			val, err = strconv.ParseInt(strNum[1:], 10, 16)
+			res = uint64(val)
+		} else {
+			res, err = strconv.ParseUint(strNum[1:], 10, 16)
+		}
 	}
+	if err != nil {
+		return 0, assemblerErr(err.Error())
+	} else if int(res) > 32767 || int(res) < -32768 {
+		return 0, assemblerErr("value is out of bounds: " + strNum)
+	}
+	return uint16(res), nil
+}
+
+func assemblerErr(e string) error {
+	// currentLine from
+	return errors.New(fmt.Sprintln("line ", currentLine, ": ", e))
 }
