@@ -7,7 +7,7 @@ import (
 	"github.com/eiannone/keyboard"
 )
 
-var trapFuncs = []func(){
+var trapFuncs = [...]func(){
 	LC3.tGetC,
 	LC3.tOut,
 	LC3.tPutS,
