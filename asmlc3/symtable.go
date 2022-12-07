@@ -23,7 +23,7 @@ func getSymTable(s *bufio.Scanner) (symTable, error) {
 		if line == "" {
 			continue
 		}
-		args := splitByDelim(line, ' ', ',')
+		args := splitByDelim(line, ',')
 		if !(isKeyword(args[0])) {
 			// add to symbol table
 			sTable[args[0]] = addr

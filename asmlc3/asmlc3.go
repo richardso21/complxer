@@ -12,9 +12,9 @@ import (
 func LoadASMFile(lc3 *lc3vm.LC3vm, file *os.File) (symTable, error) {
 	sf := bufio.NewScanner(file)
 	sf.Split(bufio.ScanLines)
-	// check for empty file first before doing anything
-	if !sf.Scan() {
-		return nil, errors.New("empty file")
+	// check for empty/corrupt file first before doing anything
+	if sf.Err() != nil {
+		return nil, errors.New(sf.Err().Error())
 	}
 	table, err := getSymTable(sf) // generate symbol table
 	if err != nil {
@@ -23,7 +23,7 @@ func LoadASMFile(lc3 *lc3vm.LC3vm, file *os.File) (symTable, error) {
 
 	file.Seek(0, io.SeekStart) // reset file pointer for second pass
 	sf = bufio.NewScanner(file)
-	loadOnLC3(lc3, sf, &table)
+	err = loadOnLC3(lc3, sf, &table)
 
-	return table, nil
+	return table, err
 }

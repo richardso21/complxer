@@ -38,7 +38,7 @@ func getSplitFunc(delims ...rune) func(rune) bool {
 		return unicode.IsSpace
 	}
 	return func(r rune) bool {
-		return strings.ContainsRune(string(delims), r)
+		return strings.ContainsRune(string(delims), r) || unicode.IsSpace(r)
 	}
 }
 
@@ -51,24 +51,24 @@ func strToUint16(strNum string) (uint16, error) {
 	} else if strNum[0] == 'B' {
 		res, err = strconv.ParseUint(strNum[1:], 2, 16)
 	} else if strNum[0] == '#' {
-		// if negative
-		if strNum[1] == '-' {
+		// if not negative
+		if strNum[1] != '-' {
+			res, err = strconv.ParseUint(strNum[1:], 10, 16)
+		} else {
 			val, err = strconv.ParseInt(strNum[1:], 10, 16)
 			res = uint64(val)
-		} else {
-			res, err = strconv.ParseUint(strNum[1:], 10, 16)
 		}
 	} else {
-		if strNum[1] == '-' {
-			val, err = strconv.ParseInt(strNum[1:], 10, 16)
-			res = uint64(val)
+		if strNum[0] != '-' {
+			res, err = strconv.ParseUint(strNum, 10, 16)
 		} else {
-			res, err = strconv.ParseUint(strNum[1:], 10, 16)
+			val, err = strconv.ParseInt(strNum, 10, 16)
+			res = uint64(val)
 		}
 	}
 	if err != nil {
 		return 0, assemblerErr(err.Error())
-	} else if int(res) > 32767 || int(res) < -32768 {
+	} else if int16(res) > 32767 || int16(res) < -32768 {
 		return 0, assemblerErr("value is out of bounds: " + strNum)
 	}
 	return uint16(res), nil

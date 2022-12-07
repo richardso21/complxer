@@ -156,11 +156,11 @@ func getImm5(strNum string) (uint16, error) {
 }
 
 func ldrToBin() tokenFunc {
-	return dBaseROffset6Func(0xA000)
+	return dBaseROffset6Func(0x6000)
 }
 
 func strToBin() tokenFunc {
-	return dBaseROffset6Func(0xB000)
+	return dBaseROffset6Func(0x7000)
 }
 
 func dBaseROffset6Func(opCode uint16) tokenFunc {
@@ -196,15 +196,15 @@ func getOffset(arg string, st *symTable, addr uint16, offsetSize uint16) (uint16
 		if err != nil {
 			return 0, assemblerErr("invalid value: " + arg)
 		}
-		offset, err := getOffsetDist(addr, uint16(val), offsetSize)
-		if err != nil {
-			return 0, err
-		}
-		return offset, nil
+		return val, nil
 	}
 }
 
 func getOffsetDist(addrFrom uint16, addrTo uint16, offsetSize uint16) (uint16, error) {
+	// if offsetsize 16, then do not mask or check
+	if offsetSize == 16 {
+		return uint16(addrTo - addrFrom), nil
+	}
 	offset := int16(addrTo - addrFrom)
 	if offset > (1<<offsetSize)-1 || offset < -(1<<offsetSize) {
 		return 0, assemblerErr("offset out of range")

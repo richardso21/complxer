@@ -16,9 +16,9 @@ func main() {
 	// testOBJ()
 	testASM()
 	LC3.Run()
-	fmt.Println(LC3.Reg())
-	for _, v := range LC3.Mem()[0x3000:0x300F] {
-		fmt.Printf("%04X ", v)
+	memSlice := LC3.Mem()[0x3000:0x303A]
+	for i := range memSlice {
+		fmt.Printf("%04X ", memSlice[i])
 	}
 	fmt.Println("\n==== Program finished ====")
 }
@@ -37,9 +37,8 @@ func testASM() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	st, err := asmlc3.LoadASMFile(LC3, f)
+	_, err = asmlc3.LoadASMFile(LC3, f)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(st)
 }

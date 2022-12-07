@@ -2,6 +2,7 @@ package asmlc3
 
 import (
 	"bufio"
+	"strings"
 
 	"github.com/richardso21/complxer/lc3vm"
 )
@@ -30,14 +31,14 @@ func loadOnLC3(lc3 *lc3vm.LC3vm, s *bufio.Scanner, st *symTable) error {
 		if line == "" {
 			continue
 		}
-		tokens := splitByDelim(line, ' ', ',')
+		tokens := splitByDelim(line, ',')
 		var binInstr uint16
 		var err error
 		if isPseudoOp(tokens[0]) { // check if pseudo op
-			if tokens[0] == ".END" {
-				return assemblerErr(".END directive should be on its own line")
+			err := pseudoOpToBin(lc3, tokens, st, &addr)
+			if err != nil {
+				return err
 			}
-			pseudoOpToBin(lc3, tokens, st, &addr)
 			continue
 		} else if !(isKeyword(tokens[0])) { // check if label
 			if len(tokens) == 1 {
@@ -49,7 +50,10 @@ func loadOnLC3(lc3 *lc3vm.LC3vm, s *bufio.Scanner, st *symTable) error {
 					tokens[1])
 			} else if isPseudoOp(tokens[1]) {
 				// pseudo op with label
-				pseudoOpToBin(lc3, tokens[1:], st, &addr)
+				err := pseudoOpToBin(lc3, tokens[1:], st, &addr)
+				if err != nil {
+					return err
+				}
 				continue
 			} else {
 				// label with instruction
@@ -67,8 +71,8 @@ func loadOnLC3(lc3 *lc3vm.LC3vm, s *bufio.Scanner, st *symTable) error {
 		// incr addr after each fill loop
 	}
 
-	if !s.Scan() {
-		return assemblerErr("missing .END directive")
+	if getLine(s) != ".END" {
+		return assemblerErr("missing or malformed .END directive: " + getLine(s))
 	}
 	return nil
 }
@@ -125,16 +129,27 @@ func tokensToBin(tokens []string, st *symTable, addr uint16) (uint16, error) {
 }
 
 func pseudoOpToBin(lc3 *lc3vm.LC3vm, tokens []string, st *symTable, addr *uint16) error {
-	if len(tokens) != 2 {
+	if len(tokens) != 2 && tokens[0] != ".STRINGZ" {
 		return assemblerErr("invalid number of arguments for " + tokens[0])
 	}
 	switch tokens[0] {
 	case ".FILL":
+		// check if it is a label that we are filling
+		if val, ok := (*st)[tokens[1]]; ok {
+			offset, err := getOffset(tokens[1], st, *addr, 16)
+			if err != nil {
+				return err
+			}
+			lc3.FillValue(offset, val)
+			*addr++
+			return nil
+		}
 		val, err := strToUint16(tokens[1])
 		if err != nil {
 			return err
 		}
 		lc3.FillValue(*addr, val)
+		*addr++
 		return nil
 
 	case ".BLKW":
@@ -149,7 +164,7 @@ func pseudoOpToBin(lc3 *lc3vm.LC3vm, tokens []string, st *symTable, addr *uint16
 		return nil
 
 	case ".STRINGZ":
-		str := tokens[1]
+		str := strings.Join(tokens[1:], " ")
 		if str[0] != '"' || str[len(str)-1] != '"' {
 			return assemblerErr("invalid string format")
 		}

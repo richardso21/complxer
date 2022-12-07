@@ -1,2 +1,5 @@
 complxer
 .vscode
+
+example/lower.asm
+example/2048.asm
