@@ -16,10 +16,18 @@ func main() {
 	// testOBJ()
 	testASM()
 	LC3.Run()
-	memSlice := LC3.Mem()[0x3000:0x303A]
+
+	fmt.Println("\n==== Memory Slice ====")
+	memSlice := LC3.Mem()[0x3000:LC3.Pc()]
 	for i := range memSlice {
 		fmt.Printf("%04X ", memSlice[i])
 	}
+
+	fmt.Println("\n==== Registers ====")
+	for i, val := range LC3.Reg() {
+		fmt.Printf("R%d: 0x%04X ", i, val)
+	}
+
 	fmt.Println("\n==== Program finished ====")
 }
 
@@ -29,7 +37,6 @@ func testOBJ() {
 		log.Fatal(err)
 	}
 	LC3.LoadObjFile(f)
-	// LC3.Run()
 }
 
 func testASM() {
