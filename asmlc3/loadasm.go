@@ -9,8 +9,10 @@ import (
 
 // keep track of current line number for error messaging
 var currentLine int = 1
+var s *bufio.Scanner
 
-func loadOnLC3(lc3 *lc3vm.LC3vm, s *bufio.Scanner, st *symTable) error {
+func loadOnLC3(lc3 *lc3vm.LC3vm, scanner *bufio.Scanner, st *symTable) error {
+	s = scanner
 	// skip commented lines
 	s.Scan()
 	currentLine = 1

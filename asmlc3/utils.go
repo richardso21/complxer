@@ -76,5 +76,6 @@ func strToUint16(strNum string) (uint16, error) {
 
 func assemblerErr(e string) error {
 	// currentLine from
-	return errors.New(fmt.Sprintln("line ", currentLine, ": ", e))
+	// return errors.New(fmt.Sprintln("line ", currentLine, ": ", e))
+	return fmt.Errorf("[line %d: %s]\nERROR: %s", currentLine, getLine(s), e)
 }
