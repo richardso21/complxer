@@ -2,7 +2,7 @@ package asmlc3
 
 import "golang.org/x/exp/slices"
 
-func brToBin(n bool, z bool, p bool) tokenFunc {
+func brToBin(n bool, z bool, p bool) binFunc {
 	var nzp uint16 = 0
 	if n {
 		nzp = nzp | 0b100
@@ -22,7 +22,7 @@ func brToBin(n bool, z bool, p bool) tokenFunc {
 	}
 }
 
-func jmpToBin() tokenFunc {
+func jmpToBin() binFunc {
 	return func(args *[]string, st *symTable, addr uint16) (uint16, error) {
 		// jmp argument must be register
 		if !isReg((*args)[0]) {
@@ -33,7 +33,7 @@ func jmpToBin() tokenFunc {
 	}
 }
 
-func jsrToBin() tokenFunc {
+func jsrToBin() binFunc {
 	return func(args *[]string, st *symTable, addr uint16) (uint16, error) {
 		offset, err := getOffset((*args)[0], st, addr, 11)
 		if err != nil {
@@ -43,7 +43,7 @@ func jsrToBin() tokenFunc {
 	}
 }
 
-func jsrrToBin() tokenFunc {
+func jsrrToBin() binFunc {
 	return func(args *[]string, st *symTable, addr uint16) (uint16, error) {
 		if !isReg((*args)[0]) {
 			return 0, assemblerErr("invalid JSRR argument: " + (*args)[0])
@@ -53,7 +53,7 @@ func jsrrToBin() tokenFunc {
 	}
 }
 
-func trapToBin() tokenFunc {
+func trapToBin() binFunc {
 	return func(args *[]string, st *symTable, addr uint16) (uint16, error) {
 		val, err := strToUint16((*args)[0])
 		if err != nil {
@@ -68,27 +68,27 @@ func trapToBin() tokenFunc {
 	}
 }
 
-func ldToBin() tokenFunc {
+func ldToBin() binFunc {
 	return dROffset9Func(0x2000)
 }
 
-func ldiToBin() tokenFunc {
+func ldiToBin() binFunc {
 	return dROffset9Func(0xA000)
 }
 
-func stToBin() tokenFunc {
+func stToBin() binFunc {
 	return dROffset9Func(0x3000)
 }
 
-func stiToBin() tokenFunc {
+func stiToBin() binFunc {
 	return dROffset9Func(0xB000)
 }
 
-func leaToBin() tokenFunc {
+func leaToBin() binFunc {
 	return dROffset9Func(0xE000)
 }
 
-func dROffset9Func(opCode uint16) tokenFunc {
+func dROffset9Func(opCode uint16) binFunc {
 	return func(args *[]string, st *symTable, addr uint16) (uint16, error) {
 		offset, err := getOffset((*args)[1], st, addr, 9)
 		if err != nil {
@@ -102,7 +102,7 @@ func dROffset9Func(opCode uint16) tokenFunc {
 	}
 }
 
-func notToBin() tokenFunc {
+func notToBin() binFunc {
 	return func(args *[]string, st *symTable, addr uint16) (uint16, error) {
 		if !isReg((*args)[0]) {
 			return 0, assemblerErr("invalid NOT argument: " + (*args)[0])
@@ -115,15 +115,15 @@ func notToBin() tokenFunc {
 	}
 }
 
-func addToBin() tokenFunc {
+func addToBin() binFunc {
 	return aluToBin(0x1000)
 }
 
-func andToBin() tokenFunc {
+func andToBin() binFunc {
 	return aluToBin(0x5000)
 }
 
-func aluToBin(opCode uint16) tokenFunc {
+func aluToBin(opCode uint16) binFunc {
 	return func(args *[]string, st *symTable, addr uint16) (uint16, error) {
 		if !isReg((*args)[0]) {
 			return 0, assemblerErr("invalid ALU argument: " + (*args)[0])
@@ -155,15 +155,15 @@ func getImm5(strNum string) (uint16, error) {
 	return imm5 & 0x001F, nil // mask out all but the last 5 bits
 }
 
-func ldrToBin() tokenFunc {
+func ldrToBin() binFunc {
 	return dBaseROffset6Func(0x6000)
 }
 
-func strToBin() tokenFunc {
+func strToBin() binFunc {
 	return dBaseROffset6Func(0x7000)
 }
 
-func dBaseROffset6Func(opCode uint16) tokenFunc {
+func dBaseROffset6Func(opCode uint16) binFunc {
 	return func(args *[]string, st *symTable, addr uint16) (uint16, error) {
 		offset, err := getOffset((*args)[2], st, addr, 6)
 		if err != nil {

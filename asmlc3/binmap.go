@@ -10,9 +10,9 @@ var noArgOpMap = map[string]uint16{
 	"RET":  0xC1C0,
 }
 
-type tokenFunc func(*[]string, *symTable, uint16) (uint16, error)
+type binFunc func(*[]string, *symTable, uint16) (uint16, error)
 
-var oneArgOpMap = map[string]tokenFunc{
+var oneArgOpMap = map[string]binFunc{
 	"BR":    brToBin(true, true, true), // same as BRnzp
 	"BRN":   brToBin(true, false, false),
 	"BRZ":   brToBin(false, true, false),
@@ -27,7 +27,7 @@ var oneArgOpMap = map[string]tokenFunc{
 	"TRAP":  trapToBin(),
 }
 
-var twoArgOpMap = map[string]tokenFunc{
+var twoArgOpMap = map[string]binFunc{
 	"LD":  ldToBin(),
 	"LDI": ldiToBin(),
 	"ST":  stToBin(),
@@ -36,7 +36,7 @@ var twoArgOpMap = map[string]tokenFunc{
 	"NOT": notToBin(),
 }
 
-var threeArgOpMap = map[string]tokenFunc{
+var threeArgOpMap = map[string]binFunc{
 	"ADD": addToBin(),
 	"AND": andToBin(),
 	"LDR": ldrToBin(),
