@@ -23,7 +23,7 @@ func LoadASMFile(lc3 *lc3vm.LC3vm, file *os.File) (symTable, error) {
 
 	file.Seek(0, io.SeekStart) // reset file pointer for second pass
 	sf = bufio.NewScanner(file)
-	err = loadOnLC3(lc3, sf, &table)
+	err = assemble(lc3, sf, &table)
 
 	return table, err
 }
