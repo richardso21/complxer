@@ -1,10 +1,8 @@
 package assembler
 
-import (
-	"bufio"
-	"os"
-)
+import "os"
 
+// writes an object file from a given assembly file
 func AsmToObj(asmFile *os.File) error {
 	// create a line-by-line scanner for assembly file
 	asmScanner := newAsmScanner(asmFile)
@@ -14,19 +12,23 @@ func AsmToObj(asmFile *os.File) error {
 	objFile, err := os.Create(objFN) // create file representation on disk (empties existing file)
 	if err != nil {
 		// something went wrong with creating file
-		// TODO
-		panic(err)
+		return err
 	}
-	objWriter := bufio.NewWriter(objFile) // create writer for object file
+	objWriter := newObjWriter(objFile) // create writer for object file
 
 	// perform first pass (symbol table)
-	table, err := getSymTable(asmScanner)
+	_, origAddr, err := getSymTable(asmScanner)
 	if err != nil {
 		return err
 	}
+
+	// write origin address as first 16-bit word of object file
+	objWriter.writeUint16(origAddr)
 
 	// perform second pass (assembly)
 	asmFile.Seek(0, 0)                  // reset file pointer
 	asmScanner = newAsmScanner(asmFile) // recreate scanner for file
 
+	// err := asmToBin()
+	return err
 }

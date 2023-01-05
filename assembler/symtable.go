@@ -2,7 +2,7 @@ package assembler
 
 type symTable map[string]uint16
 
-func getSymTable(scanner *asmScanner) (symTable, error) {
+func getSymTable(scanner *asmScanner) (symTable, uint16, error) {
 	__asmScanner = scanner
 	table := make(symTable)
 
@@ -12,13 +12,14 @@ func getSymTable(scanner *asmScanner) (symTable, error) {
 		ok, numTokens = scanner.getNextLine()
 		if !ok {
 			// EOF reached w/o .ORIG or file/scanner error
-			return nil, asmGlobalErr("no .ORIG found")
+			return nil, 0, asmGlobalErr("no .ORIG found")
 		}
 	}
 	// extract origin address
-	addr, err := getOrigAddr(scanner.currentTokens)
+	origAddr, err := getOrigAddr(scanner.currentTokens)
+	addr := origAddr
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	// keep looping until EOF
@@ -41,7 +42,7 @@ func getSymTable(scanner *asmScanner) (symTable, error) {
 		}
 	}
 
-	return table, nil
+	return table, origAddr, nil
 }
 
 func getOrigAddr(tokens []string) (uint16, error) {

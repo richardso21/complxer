@@ -65,6 +65,7 @@ func getSplitFunc(delims ...rune) func(rune) bool {
 	}
 }
 
+// needed to allow for whitespaces, semicolons, commas, etc. in stringz commands
 func getStringzStr(line string) (string, error) {
 	_, after, ok := strings.Cut(line, "\"") // get argument in double quotes
 	// error handling (no string found or string not terminated)
