@@ -5,10 +5,9 @@ import (
 	"os"
 )
 
-func AsmToObj(asmFile *os.File) {
+func AsmToObj(asmFile *os.File) error {
 	// create a line-by-line scanner for assembly file
-	asmScanner := bufio.NewScanner(asmFile)
-	asmScanner.Split(bufio.ScanLines)
+	asmScanner := newAsmScanner(asmFile)
 
 	// create object file writer
 	objFN := asmFile.Name() + ".obj" // object file name
@@ -22,4 +21,12 @@ func AsmToObj(asmFile *os.File) {
 
 	// perform first pass (symbol table)
 	table, err := getSymTable(asmScanner)
+	if err != nil {
+		return err
+	}
+
+	// perform second pass (assembly)
+	asmFile.Seek(0, 0)                  // reset file pointer
+	asmScanner = newAsmScanner(asmFile) // recreate scanner for file
+
 }
