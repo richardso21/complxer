@@ -25,6 +25,13 @@ var opToBinMap = map[string]binFunc{
 	"STI":   stiToBin(),
 	"STR":   strToBin(),
 	"TRAP":  trapToBin(),
+	"GETC":  noArgToBin(0xF020),
+	"OUT":   noArgToBin(0xF021),
+	"PUTS":  noArgToBin(0xF022),
+	"IN":    noArgToBin(0xF023),
+	"HALT":  noArgToBin(0xF025),
+	"RTI":   noArgToBin(0x8000),
+	"RET":   noArgToBin(0xC1C0),
 }
 
 type pseudoBinFunc func(*string, *uint16, *objWriter) error

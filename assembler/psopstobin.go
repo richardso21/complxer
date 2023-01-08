@@ -2,12 +2,17 @@ package assembler
 
 func fillToBin() pseudoBinFunc {
 	return func(line *string, addr *uint16, writer *objWriter) error {
-		tokens := getTokens(*line)[1:]
-		if len(tokens) != 1 {
+		tokens := getTokens(*line)
+		// strip label
+		if !isKeyword(tokens[0]) {
+			tokens = tokens[1:]
+		}
+		args := tokens[1:]
+		if len(args) != 1 {
 			return asmLineErr("invalid number of arguments for .FILL")
 		}
 		// only accepts number literals (no labels)
-		val, err := strToUint16(tokens[0])
+		val, err := strToUint16(args[0])
 		if err != nil {
 			return err
 		}
@@ -19,11 +24,15 @@ func fillToBin() pseudoBinFunc {
 
 func blkwToBin() pseudoBinFunc {
 	return func(line *string, addr *uint16, writer *objWriter) error {
-		tokens := getTokens(*line)[1:]
-		if len(tokens) != 1 {
+		tokens := getTokens(*line)
+		if !isKeyword(tokens[0]) {
+			tokens = tokens[1:]
+		}
+		args := tokens[1:]
+		if len(args) != 1 {
 			return asmLineErr("invalid number of arguments for .BLKW")
 		}
-		val, err := strToUint16(tokens[0])
+		val, err := strToUint16(args[0])
 		if err != nil {
 			return err
 		}

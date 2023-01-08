@@ -83,6 +83,15 @@ func trapToBin() binFunc {
 	}
 }
 
+func noArgToBin(opCode uint16) binFunc {
+	return func(args *[]string, st *symTable, addr uint16) (uint16, error) {
+		if len(*args) != 0 {
+			return 0, asmLineErr("invalid number of arguments for instruction")
+		}
+		return opCode, nil
+	}
+}
+
 func ldToBin() binFunc {
 	return dROffset9Func(0x2000)
 }
