@@ -16,8 +16,8 @@ func AsmToObj(asmFile *os.File) error {
 	}
 	objWriter := newObjWriter(objFile) // create writer for object file
 
-	// perform first pass (symbol table)
-	_, origAddr, err := getSymTable(asmScanner)
+	// perform first pass (symbol table, check .ORIG & .END)
+	table, origAddr, err := getSymTable(asmScanner)
 	if err != nil {
 		return err
 	}
@@ -29,6 +29,6 @@ func AsmToObj(asmFile *os.File) error {
 	asmFile.Seek(0, 0)                  // reset file pointer
 	asmScanner = newAsmScanner(asmFile) // recreate scanner for file
 
-	// err := asmToBin()
+	err = asmToBin(asmScanner, objWriter, table, origAddr)
 	return err
 }

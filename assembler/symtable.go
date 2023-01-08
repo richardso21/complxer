@@ -28,6 +28,10 @@ func getSymTable(scanner *asmScanner) (symTable, uint16, error) {
 			continue // skip empty lines
 		}
 		tokens := scanner.currentTokens
+		if numTokens == 1 && tokens[0] == ".END" {
+			// successful once .END is found
+			return table, origAddr, nil
+		}
 		if !isKeyword(tokens[0]) {
 			// add to symbol table
 			table[tokens[0]] = addr
@@ -42,7 +46,8 @@ func getSymTable(scanner *asmScanner) (symTable, uint16, error) {
 		}
 	}
 
-	return table, origAddr, nil
+	// .END not found or is invalid
+	return nil, 0, asmGlobalErr(".END not found or is invalid")
 }
 
 func getOrigAddr(tokens []string) (uint16, error) {
