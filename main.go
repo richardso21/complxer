@@ -53,7 +53,7 @@ func testASM() {
 }
 
 func testASMnew() {
-	f, err := os.Open("./example/fibloop.asm")
+	f, err := os.Open("./example/lower.asm")
 	if err != nil {
 		log.Fatal(err)
 	}

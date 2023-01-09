@@ -12,7 +12,7 @@ func AsmToObj(asmFile *os.File) (string, error) {
 	asmFN := asmFile.Name()
 
 	// create object file writer on "out" directory
-	if err := os.Mkdir("out", 0777); err != nil {
+	if err := os.Mkdir("out", 0777); err != nil && !os.IsExist(err) {
 		return "", err
 	}
 	objFN := "out/" + filepath.Base(asmFN) + ".obj" // object file name
