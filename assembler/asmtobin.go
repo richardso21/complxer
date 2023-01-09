@@ -33,7 +33,7 @@ func asmToBin(scanner *asmScanner, writer *objWriter, table symTable, addr uint1
 			goto FINISH
 		case ".FILL", ".BLKW", ".STRINGZ":
 			// use func in map to take care of these pseudo ops
-			if err := pseudoOpToBinMap[op](&scanner.currentLine, &addr, writer); err != nil {
+			if err := pseudoOpToBinMap[op](&scanner.currentLine, &table, &addr, writer); err != nil {
 				return err
 			}
 			// no need to write or increment addr, done in func call

@@ -34,7 +34,7 @@ var opToBinMap = map[string]binFunc{
 	"RET":   noArgToBin(0xC1C0),
 }
 
-type pseudoBinFunc func(*string, *uint16, *objWriter) error
+type pseudoBinFunc func(*string, *symTable, *uint16, *objWriter) error
 
 var pseudoOpToBinMap = map[string]pseudoBinFunc{
 	".FILL":    fillToBin(),

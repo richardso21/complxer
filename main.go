@@ -53,7 +53,7 @@ func testASM() {
 }
 
 func testASMnew() {
-	f, err := os.Open("./example/fibloop.asm")
+	f, err := os.Open("./example/2048.asm")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,5 +65,7 @@ func testASMnew() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("assembled!")
 	LC3.LoadObjFile(objFile)
+	fmt.Println("loaded!")
 }

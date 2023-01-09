@@ -9,34 +9,6 @@ import (
 
 var __asmScanner *asmScanner
 
-// global variables to track line for better error messages
-// TODO: extend Scanner struct to include these variables/methods
-// var __currentLine string
-// var __currentTokens []string
-// var __lineNumber int
-
-// // use nextLine() and getCurrLine() in place for interacting with scanner object
-// func nextLine() bool {
-// 	// get next line of assembly file scanner
-// 	if !__asmScanner.Scan() {
-// 		return false // no more lines or error
-// 	}
-// 	getCurrTokens()
-// 	__lineNumber++ // update global line number
-// 	return true
-// }
-
-// func currLine() string {
-// 	line := __asmScanner.Text()
-// 	__currentLine = line // update global current line
-// 	return line
-// }
-
-// func getCurrTokens() []string {
-// 	__currentTokens = getTokens(currLine()) // alias to get tokens from current line
-// 	return __currentTokens
-// }
-
 func getTokens(line string) []string {
 	line = strings.Split(line, ";")[0] // strip comments
 	if line == "" {

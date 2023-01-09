@@ -32,6 +32,7 @@ func getSymTable(scanner *asmScanner) (symTable, uint16, error) {
 			// successful once .END is found
 			return table, origAddr, nil
 		}
+		// TODO: employ special behavior for labels w/ .BLKW and .STRINGZ pseudo ops
 		if !isKeyword(tokens[0]) {
 			// add to symbol table
 			table[tokens[0]] = addr

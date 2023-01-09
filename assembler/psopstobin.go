@@ -1,7 +1,7 @@
 package assembler
 
 func fillToBin() pseudoBinFunc {
-	return func(line *string, addr *uint16, writer *objWriter) error {
+	return func(line *string, table *symTable, addr *uint16, writer *objWriter) error {
 		tokens := getTokens(*line)
 		// strip label
 		if !isKeyword(tokens[0]) {
@@ -11,19 +11,25 @@ func fillToBin() pseudoBinFunc {
 		if len(args) != 1 {
 			return asmLineErr("invalid number of arguments for .FILL")
 		}
-		// only accepts number literals (no labels)
-		val, err := strToUint16(args[0])
-		if err != nil {
-			return err
+		if val, ok := (*table)[args[0]]; ok {
+			// if symbol is label, write where label points to
+			writer.writeUint16(val)
+		} else {
+			// check if its a valid number and write
+			val, err := strToUint16(args[0])
+			if err != nil {
+				return err
+			}
+			writer.writeUint16(val)
 		}
+		// increment address
 		*addr++
-		writer.writeUint16(val)
 		return nil
 	}
 }
 
 func blkwToBin() pseudoBinFunc {
-	return func(line *string, addr *uint16, writer *objWriter) error {
+	return func(line *string, table *symTable, addr *uint16, writer *objWriter) error {
 		tokens := getTokens(*line)
 		if !isKeyword(tokens[0]) {
 			tokens = tokens[1:]
@@ -45,7 +51,7 @@ func blkwToBin() pseudoBinFunc {
 }
 
 func stringzToBin() pseudoBinFunc {
-	return func(line *string, addr *uint16, writer *objWriter) error {
+	return func(line *string, table *symTable, addr *uint16, writer *objWriter) error {
 		stringz, err := getStringzStr(*line)
 		if err != nil {
 			return err
