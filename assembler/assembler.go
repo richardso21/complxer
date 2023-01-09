@@ -1,15 +1,22 @@
 package assembler
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+)
 
 // writes an object file from a given assembly file
 func AsmToObj(asmFile *os.File) (string, error) {
 	// create a line-by-line scanner for assembly file
 	asmScanner := newAsmScanner(asmFile)
+	asmFN := asmFile.Name()
 
-	// create object file writer
-	objFN := asmFile.Name() + ".obj" // object file name
-	objFile, err := os.Create(objFN) // create file representation on disk (empties existing file)
+	// create object file writer on "out" directory
+	if err := os.Mkdir("out", 0777); err != nil {
+		return "", err
+	}
+	objFN := "out/" + filepath.Base(asmFN) + ".obj" // object file name
+	objFile, err := os.Create(objFN)                // create file representation on disk (empties existing file)
 	if err != nil {
 		// something went wrong with creating file
 		return "", err
