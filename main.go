@@ -19,13 +19,13 @@ func main() {
 	testASMnew()
 	LC3.Run()
 
-	fmt.Println("\n==== Memory Slice ====")
+	fmt.Print("\n\n==== Memory Slice ====\n")
 	memSlice := LC3.Mem()[0x3000:LC3.Pc()]
 	for i := range memSlice {
 		fmt.Printf("%04X ", memSlice[i])
 	}
 
-	fmt.Println("\n==== Registers ====")
+	fmt.Print("\n==== Registers ====\n")
 	for i, val := range LC3.Reg() {
 		fmt.Printf("R%d: 0x%04X ", i, val)
 	}
@@ -53,7 +53,7 @@ func testASM() {
 }
 
 func testASMnew() {
-	f, err := os.Open("./example/lower.asm")
+	f, err := os.Open("./example/2048.asm")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -67,5 +67,5 @@ func testASMnew() {
 	}
 	fmt.Println("assembled!")
 	LC3.LoadObjFile(objFile)
-	fmt.Println("loaded!")
+	fmt.Print("loaded! \nexecuting...\n\n")
 }

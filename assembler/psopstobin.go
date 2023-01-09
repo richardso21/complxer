@@ -60,6 +60,9 @@ func stringzToBin() pseudoBinFunc {
 			writer.writeUint16(uint16(stringz[i]))
 			*addr++
 		}
+		// null terminator
+		writer.writeUint16(0)
+		*addr++
 		return nil
 	}
 }
