@@ -11,17 +11,14 @@ throughout the course.
 
 ## TODO
 
-- Interrupts, Async I/O
-- Iron out the assembler bugs
-  - omitting ';' in .STRINGZ strings
-  - better error messages
-  - etc.
 - Stepping/Debug mode for LC3
 - **GUI**
+- Interrupts, Async I/O
+- Iron out assembler bugs
 
 ### Done
 
-- Basic Assembler (usable for simple programs)
+- LC3 Assembler (usable for most programs)
 - Mock Registers & Memory
 - Support for all op-Codes & Traps
 - Memory-Mapped I/O
