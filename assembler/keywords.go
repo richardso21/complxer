@@ -1,4 +1,4 @@
-package asmlc3
+package assembler
 
 import (
 	"golang.org/x/exp/slices"
