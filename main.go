@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/richardso21/complxer/asmlc3"
 	"github.com/richardso21/complxer/assembler"
 	"github.com/richardso21/complxer/lc3vm"
 )
@@ -15,8 +14,7 @@ var LC3 = lc3vm.LC3
 
 func main() {
 	// testOBJ()
-	// testASM()
-	testASMnew()
+	testASM()
 	LC3.Run()
 
 	fmt.Print("\n\n==== Memory Slice ====\n")
@@ -42,17 +40,6 @@ func testOBJ() {
 }
 
 func testASM() {
-	f, err := os.Open("./example/fibloop.asm")
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = asmlc3.LoadASMFile(LC3, f)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func testASMnew() {
 	f, err := os.Open("./example/stringz.asm")
 	if err != nil {
 		log.Fatal(err)
