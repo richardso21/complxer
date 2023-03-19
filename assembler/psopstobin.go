@@ -57,7 +57,22 @@ func stringzToBin() pseudoBinFunc {
 			return err
 		}
 		for i := 0; i < len(stringz); i++ {
-			writer.writeUint16(uint16(stringz[i]))
+			// escape forward slash
+			if stringz[i] == '\\' {
+				i++
+				if stringz[i] == 'n' {
+					writer.writeUint16('\n')
+				} else if stringz[i] == 't' {
+					writer.writeUint16('\t')
+				} else if stringz[i] == '\\' {
+					writer.writeUint16('\\')
+				} else {
+					return asmLineErr("invalid escape sequence")
+				}
+				// thanks github copilot :D
+			} else {
+				writer.writeUint16(uint16(stringz[i]))
+			}
 			*addr++
 		}
 		// null terminator
