@@ -13,6 +13,7 @@ type LC3vm struct {
 	nzp       uint16
 	halt      bool
 	stackSize uint16
+	// stack			[]string
 }
 
 // memory-mapped I/O
@@ -54,10 +55,9 @@ func (lc3 *LC3vm) Run() {
 }
 
 func (lc3 *LC3vm) Next() {
-	currStackSize := lc3.stackSize
-	lc3.Step()
-	// next over JSR/JSRR statements
-	for lc3.stackSize > currStackSize {
+	// Next pauses execution once next line in PC is reached
+	nextLine := lc3.pc + 1
+	for lc3.pc != nextLine {
 		lc3.Step()
 	}
 }
